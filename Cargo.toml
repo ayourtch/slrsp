@@ -1,0 +1,23 @@
+[package]
+name = "aytest"
+version = "0.1.0"
+authors = ["Andrew Yourtchenko <ayourtch@gmail.com>"]
+
+[dependencies]
+rspten = { path = "libs/rspten" }
+rspten_derive = { path = "libs/rspten_derive" }
+
+
+serde_json = "*"
+serde = "*"
+serde_derive = "*"
+iron = "*"
+urlencoded = "*"
+
+iron-sessionstorage = { git = "https://github.com/ayourtch/iron-sessionstorage.git" }
+diesel = { version = "1.1.*", features = ["postgres", "sqlite", "huge-tables", "chrono"] }
+chrono = { version = "*", features = ["serde"] }
+mustache = "*"
+router = "*"
+
+

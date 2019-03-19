@@ -1,0 +1,17 @@
+teststate template
+<br/>
+message = {{state.txtTextMessage}}
+<br/>
+{{^state_key.id}}
+No key supplied!
+{{/state_key.id}}
+{{#state_key.id}}
+key = {{state_key.id}}
+{{/state_key.id}}
+
+
+<pre>
+{{state_json}}
+{{state_key_json}}
+</pre>
+

@@ -76,15 +76,27 @@ pub fn req_get_event(req: &mut Request) -> RspEvent {
                 }
                 _ => {}
             }
+            if &event == "unknown" && &target == "" {
+                println!("post hashmap: {:?}", &hashmap);
+                match hashmap.keys().into_iter().find(|x| x.starts_with("submit")) {
+                    Some(a) => {
+                        event = "submit".into();
+                        target = a["submit".len()..].into();
+                    }
+                    _ => {}
+                }
+            }
         }
         Err(ref e) => {
             println!("req_get_event err: {:?}", e);
         }
     };
-    return RspEvent {
+    let retev = RspEvent {
         event: event,
         target: target,
     };
+    println!("Event: {:?}", &retev);
+    retev
 }
 /*
 
@@ -189,6 +201,7 @@ where
         curr_key: &T,
         maybe_state: &mut Option<Self>,
         maybe_initial_state: &Option<Self>,
+        curr_initial_state: &Self,
     ) -> RspAction<T>;
 
     fn handler(req: &mut Request) -> IronResult<Response> {
@@ -197,7 +210,14 @@ where
 
         let maybe_res: Result<Self, serde_json::Error> =
             serde_json::from_str(&req_get_state_string(req));
-        let mut maybe_state = maybe_res.ok();
+
+        let mut maybe_state = match maybe_res {
+            Ok(s) => Some(s),
+            Err(e) => {
+                println!("Error deserializing state: {:?}", e);
+                None
+            }
+        };
 
         let maybe_res: Result<Self, serde_json::Error> =
             serde_json::from_str(&req_get_initial_state_string(req));
@@ -213,7 +233,14 @@ where
 
         let event = req_get_event(req);
 
-        let action = Self::event_handler(&event, &key, &mut maybe_state, &maybe_initial_state);
+        let curr_initial_state = Self::get_state(key.clone());
+        let action = Self::event_handler(
+            &event,
+            &key,
+            &mut maybe_state,
+            &maybe_initial_state,
+            &curr_initial_state,
+        );
         let mut redirect_to = "".to_string();
         let mut reload_state = false;
 
@@ -232,7 +259,7 @@ where
         };
 
         if redirect_to.is_empty() {
-            if maybe_initial_state.is_none() || reload_state {
+            if maybe_state.is_none() || maybe_initial_state.is_none() || reload_state {
                 let st = Self::get_state(key.clone());
                 maybe_initial_state = Some(st.clone());
                 maybe_state = Some(st);
@@ -271,13 +298,11 @@ where
     }
 }
 
-pub struct RspServer {
-}
+pub struct RspServer {}
 
 impl RspServer {
     pub fn new() -> RspServer {
-        RspServer {
-        }
+        RspServer {}
     }
 
     pub fn run(&mut self, router: Router, service_name: &str, port: u16) {

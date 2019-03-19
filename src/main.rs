@@ -89,7 +89,26 @@ impl RspState<KeyI32, MyPageType> for TestState {
         _curr_key: &KeyI32,
         _maybe_state: &mut Option<TestState>,
         _maybe_initial_state: &Option<TestState>,
+        _curr_initial_state: &TestState,
     ) -> RspAction<KeyI32> {
+        if _ev.event == "submit" {
+            if let Some(state) = _maybe_state {
+                let tgt = &_ev.target[..];
+                match tgt {
+                    "_eq" => {
+                        state.txt_text_message =
+                            format!("Pressed eq when state is {}", state.dd_testing);
+                    }
+                    "_lt" => {
+                        state.dd_testing = state.dd_testing - 1;
+                    }
+                    "_gt" => {
+                        state.dd_testing = state.dd_testing + 1;
+                    }
+                    _ => {}
+                }
+            }
+        }
         rspten::RspAction::Render
     }
 }
@@ -124,11 +143,12 @@ impl RspState<i32, MyPageType> for Test2State {
         curr_key: &i32,
         _maybe_state: &mut Option<Test2State>,
         _maybe_initial_state: &Option<Test2State>,
+        _curr_initial_state: &Test2State,
     ) -> RspAction<i32> {
         if *curr_key == 42 {
-          rspten::RspAction::RedirectTo("/".to_string())
-        } else { 
-          rspten::RspAction::Render
+            rspten::RspAction::RedirectTo("/".to_string())
+        } else {
+            rspten::RspAction::Render
         }
     }
 }
@@ -138,6 +158,7 @@ fn main() {
 
     let mut router = Router::new();
     router.get("/", TestState::handler, "/");
+    router.post("/", TestState::handler, "/");
     router.get("/x", Test2State::handler, "/x");
 
     let mut s = rspten::RspServer::new();

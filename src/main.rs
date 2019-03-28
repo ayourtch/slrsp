@@ -36,6 +36,7 @@ struct LoginSessionState {
 
 use std::collections::HashMap;
 
+extern crate mustache;
 extern crate router;
 
 #[macro_use]
@@ -43,6 +44,7 @@ extern crate serde_derive;
 extern crate serde;
 extern crate serde_json;
 
+#[macro_use]
 extern crate rspten;
 #[macro_use]
 extern crate rspten_derive;
@@ -52,6 +54,7 @@ struct MyPageType {}
 impl rspten::RspPageType for MyPageType {}
 
 use rspten::RspState;
+use rspten::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct KeyI32 {
@@ -65,8 +68,20 @@ struct TestState {
     txt_text_message: String,
 }
 
+use mustache::MapBuilder;
+use mustache::Template;
 use rspten::RspAction;
 use rspten::RspEvent;
+
+struct HasDrop {
+    data: i32,
+}
+
+impl Drop for HasDrop {
+    fn drop(&mut self) {
+        println!("Dropping!");
+    }
+}
 
 impl RspState<KeyI32, MyPageType> for TestState {
     fn get_template_name() -> String {
@@ -84,6 +99,26 @@ impl RspState<KeyI32, MyPageType> for TestState {
             txt_text_message: "test".to_string(),
         }
     }
+    fn fill_data(
+        data: MapBuilder,
+        ev: &RspEvent,
+        curr_key: &KeyI32,
+        state: &Self,
+        initial_state: &Self,
+        curr_initial_state: &Self,
+    ) -> MapBuilder {
+        let mut data = data;
+        html_button!(btnTest, "Test");
+
+        btnTest.disabled = if state.dd_testing % 2 == 0 {
+            true
+        } else {
+            false
+        };
+        data_insert!(data, btnTest);
+        data
+    }
+
     fn event_handler(
         _ev: &RspEvent,
         _curr_key: &KeyI32,

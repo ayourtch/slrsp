@@ -45,6 +45,211 @@ use std::collections::HashMap;
 use mustache::MapBuilder;
 use mustache::Template;
 
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
+pub struct HtmlText {
+    pub id: String,
+    pub value: String,
+    pub labeltext: String,
+    pub highlight: bool,
+    pub hidden: bool,
+    pub disabled: bool,
+}
+
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
+pub struct HtmlButton {
+    pub id: String,
+    pub value: String,
+    pub labeltext: String,
+    pub highlight: bool,
+    pub hidden: bool,
+    pub disabled: bool,
+}
+
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
+pub struct HtmlCheck {
+    pub id: String,
+    pub labeltext: String,
+    pub checked: bool,
+    pub highlight: bool,
+    pub hidden: bool,
+    pub disabled: bool,
+}
+
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
+pub struct HtmlSelectItem<T> {
+    pub i: usize,
+    pub user_label: String,
+    pub value: T,
+    pub selected: bool,
+}
+
+use std::fmt::Debug;
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
+pub struct HtmlSelect<T: PartialEq + Clone + Debug> {
+    pub id: String,
+    pub items: Vec<HtmlSelectItem<T>>,
+    pub selected_value: T,
+    pub highlight: bool,
+    pub hidden: bool,
+    pub disabled: bool,
+}
+
+impl<T> HtmlSelect<T>
+where
+    T: std::cmp::PartialEq + std::clone::Clone + Debug,
+{
+    pub fn item(self: &mut HtmlSelect<T>, user_label: &str, value: T) {
+        let i = HtmlSelectItem::<T> {
+            user_label: user_label.into(),
+            value: value.into(),
+            selected: false,
+            i: self.items.len(),
+        };
+        self.items.push(i);
+    }
+
+    pub fn set_selected_value(self: &mut HtmlSelect<T>, selected_value: &mut T) {
+        let mut found = false;
+        // println!("Setting selected value: {:?}", &selected_value);
+        for mut item in &mut self.items {
+            if item.value == *selected_value {
+                item.selected = true;
+                found = true;
+                self.selected_value = selected_value.clone();
+            } else {
+                item.selected = false;
+            }
+            // println!("Item: {:?}", &item);
+        }
+        if !found {
+            if self.items.len() > 0 {
+                self.items[0].selected = true;
+                *selected_value = self.items[0].value.clone();
+                self.selected_value = selected_value.clone();
+
+            // println!("Setting selected value to {:?}", &selected_value);
+            } else {
+                // println!("Can not set default selected value");
+            }
+        } else {
+            // println!("Found in items, selected value not reset");
+        }
+    }
+}
+impl HtmlSelect<String> {
+    pub fn item1(self: &mut HtmlSelect<String>, user_label: &str) {
+        let i = HtmlSelectItem::<String> {
+            i: self.items.len(),
+            user_label: user_label.into(),
+            value: user_label.into(),
+            selected: false,
+        };
+        self.items.push(i);
+    }
+}
+
+#[macro_export]
+macro_rules! html_select {
+    ( $elt: ident, $from: expr , $state: ident, $default_state: ident, $modified: ident) => {
+        let mut $elt = $from;
+        $elt.set_selected_value(&mut $state.$elt);
+        $elt.highlight = $state.$elt != $default_state.$elt;
+        $elt.id = format!("{}", stringify!($elt));
+        $modified = $modified || $elt.highlight;
+    };
+}
+
+#[macro_export]
+macro_rules! html_nested_select {
+    ( $parent: ident, $idx: ident, $elt: ident, $from: expr , $state: ident, $default_state: ident, $modified: ident) => {
+        let mut $elt = $from;
+        $elt.set_selected_value(&mut $state.$parent[$idx].$elt);
+        $elt.highlight = $state.$parent[$idx].$elt != $default_state.$parent[$idx].$elt;
+        $elt.id = format!("{}__{}__{}", stringify!($parent), $idx, stringify!($elt));
+        $modified = $modified || $elt.highlight;
+    };
+}
+
+#[macro_export]
+macro_rules! html_text {
+    ( $elt: ident, $state: ident, $default_state: ident, $modified: ident) => {
+        let mut $elt: HtmlText = Default::default();
+        $elt.highlight = $state.$elt != $default_state.$elt;
+        $elt.value = $state.$elt.clone();
+        $elt.id = format!("{}", stringify!($elt));
+        $modified = $modified || $elt.highlight;
+    };
+}
+
+#[macro_export]
+macro_rules! html_text_escape_backtick {
+    ( $elt: ident, $state: ident, $default_state: ident, $modified: ident) => {
+        let mut $elt: HtmlText = Default::default();
+        $elt.highlight = $state.$elt != $default_state.$elt;
+        $elt.value = $state.$elt.clone().replace("`", r#"\`"#);
+        $elt.id = format!("{}", stringify!($elt));
+        $modified = $modified || $elt.highlight;
+    };
+}
+
+#[macro_export]
+macro_rules! html_nested_text {
+    ( $parent: ident, $idx: ident, $elt: ident, $state: ident, $default_state: ident, $modified: ident) => {
+        let mut $elt: HtmlText = Default::default();
+        $elt.highlight = $state.$parent[$idx].$elt != $default_state.$parent[$idx].$elt;
+        $elt.value = $state.$parent[$idx].$elt.clone();
+        $elt.id = format!("{}__{}__{}", stringify!($parent), $idx, stringify!($elt));
+        $modified = $modified || $elt.highlight;
+    };
+}
+
+#[macro_export]
+macro_rules! html_check {
+    ( $elt: ident, $state: ident, $default_state: ident, $modified: ident) => {
+        let mut $elt: HtmlCheck = Default::default();
+        $elt.highlight = $state.$elt != $default_state.$elt;
+        $modified = $modified || $elt.highlight;
+        $elt.id = format!("{}", stringify!($elt));
+        $elt.checked = $state.$elt;
+    };
+}
+
+#[macro_export]
+macro_rules! html_nested_check {
+    ( $parent: ident, $idx: ident, $elt: ident, $state: ident, $default_state: ident, $modified: ident) => {
+        let mut $elt: HtmlCheck = Default::default();
+        $elt.highlight = $state.$parent[$idx].$elt != $default_state.$parent[$idx].$elt;
+        $modified = $modified || $elt.highlight;
+        $elt.id = format!("{}__{}__{}", stringify!($parent), $idx, stringify!($elt));
+        $elt.checked = $state.$parent[$idx].$elt;
+    };
+}
+
+#[macro_export]
+macro_rules! html_button {
+    ( $elt: ident, $label: expr) => {
+        let mut $elt: HtmlButton = Default::default();
+        $elt.id = format!("{}", stringify!($elt));
+        $elt.value = $label.into();
+    };
+}
+
+#[macro_export]
+macro_rules! html_nested_button {
+    ($parent: ident, $idx: ident,  $elt: ident, $label: expr) => {
+        let mut $elt: HtmlButton = Default::default();
+        $elt.id = format!("{}__{}__{}", stringify!($parent), $idx, stringify!($elt));
+        $elt.value = $label.into();
+    };
+}
+
+#[macro_export]
+macro_rules! data_insert {
+    ($data: ident, $elt: ident) => {
+        $data = $data.insert(stringify!($elt), &$elt).unwrap();
+    };
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct RspEvent {
     pub event: String,
@@ -158,6 +363,7 @@ pub fn compile_template(name: &str) -> Template {
     maybe_compile_template(name).expect("Failed to compile")
 }
 
+#[macro_export]
 macro_rules! get_page_template {
     ( $name: expr) => {
         match maybe_compile_template($name) {
@@ -203,6 +409,17 @@ where
         maybe_initial_state: &Option<Self>,
         curr_initial_state: &Self,
     ) -> RspAction<T>;
+
+    fn fill_data(
+        data: MapBuilder,
+        ev: &RspEvent,
+        curr_key: &T,
+        state: &Self,
+        initial_state: &Self,
+        curr_initial_state: &Self,
+    ) -> MapBuilder {
+        data
+    }
 
     fn handler(req: &mut Request) -> IronResult<Response> {
         use iron::headers::ContentType;
@@ -268,6 +485,14 @@ where
             let template = get_page_template!(&Self::get_template_name());
             let state = maybe_state.unwrap();
             let initial_state = maybe_initial_state.unwrap();
+            data = Self::fill_data(
+                data,
+                &event,
+                &key,
+                &state,
+                &initial_state,
+                &curr_initial_state,
+            );
             data = data.insert("state", &state).unwrap();
             data = data.insert("state_key", &key).unwrap();
             data = data.insert("initial_state", &initial_state).unwrap();

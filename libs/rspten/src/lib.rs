@@ -45,6 +45,35 @@ use std::collections::HashMap;
 use mustache::MapBuilder;
 use mustache::Template;
 
+pub struct DataCollector {
+    data: Vec<mustache::Data>,
+}
+
+impl DataCollector {
+  fn fill_data(self: &Self, data: mustache::Data) -> () {
+    ()
+  }
+}
+
+impl Debug for DataCollector {
+    fn fmt(self: &Self, formatter: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
+     Ok(())
+    }
+}
+
+impl Default for DataCollector {
+    fn default() -> Self {
+       DataCollector { data: vec![] }
+    }
+}
+
+impl Clone for DataCollector {
+    fn clone(self: &Self) -> Self {
+       DataCollector { data: vec![] }
+    }
+}
+
+
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]
 pub struct HtmlText {
     pub id: String,
@@ -53,6 +82,14 @@ pub struct HtmlText {
     pub highlight: bool,
     pub hidden: bool,
     pub disabled: bool,
+    #[serde(skip)]
+    dc: DataCollector,
+}
+
+impl Drop for HtmlText {
+  fn drop(&mut self) {
+        println!("Dropping {}!", self.id);
+  }
 }
 
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]
@@ -63,6 +100,14 @@ pub struct HtmlButton {
     pub highlight: bool,
     pub hidden: bool,
     pub disabled: bool,
+    #[serde(skip)]
+    dc: DataCollector,
+}
+
+impl Drop for HtmlButton {
+  fn drop(&mut self) {
+        println!("Dropping {:?}!", self.id);
+  }
 }
 
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]
@@ -93,6 +138,13 @@ pub struct HtmlSelect<T: PartialEq + Clone + Debug> {
     pub hidden: bool,
     pub disabled: bool,
 }
+
+impl<T> Drop for HtmlSelect<T> where T: PartialEq + Clone + Debug {
+  fn drop(&mut self) {
+        println!("Dropping {:?}!", self.id);
+  }
+}
+
 
 impl<T> HtmlSelect<T>
 where

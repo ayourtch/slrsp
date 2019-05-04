@@ -66,12 +66,6 @@ pub struct HtmlButton {
     pub disabled: bool,
 }
 
-impl HtmlButton {
-    pub fn set_disabled(&mut self, a_disabled: bool) {
-        self.disabled = a_disabled;
-    }
-}
-
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]
 pub struct HtmlCheck {
     pub id: String,

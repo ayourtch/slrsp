@@ -1,7 +1,5 @@
 extern crate chrono;
 extern crate mount;
-// extern crate procinfo;
-// extern crate quickersort;
 extern crate regex;
 extern crate staticfile;
 
@@ -26,17 +24,14 @@ extern crate serde;
 extern crate serde_json;
 
 // #[macro_use]
-// extern crate hyper;
 extern crate params;
 
 use router::Router;
 
-// use iron::modifiers::Redirect;
 use iron::prelude::*;
 use iron::status;
 
 use iron_sessionstorage::backends::SignedCookieBackend;
-// use iron_sessionstorage::traits::*;
 use iron_sessionstorage::SessionStorage;
 
 use iron::Handler;

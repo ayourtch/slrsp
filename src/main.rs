@@ -1,39 +1,3 @@
-/*
-extern crate chrono;
-extern crate iron;
-extern crate iron_sessionstorage;
-extern crate rspten;
-extern crate diesel;
-extern crate urlencoded;
-extern crate mustache;
-#[macro_use]
-extern crate rspten_derive;
-
-
-use chrono::NaiveDateTime;
-use diesel::prelude::*;
-use iron::prelude::*;
-use iron::status;
-
-// use iron_sessionstorage;
-use iron_sessionstorage::traits::*;
-use rspten::*;
-use urlencoded::UrlEncodedBody;
-
-use std::collections::HashMap;
-
-#[macro_use]
-extern crate serde_derive;
-extern crate serde;
-extern crate serde_json;
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct LoginSessionState {
-  pub username: String,
-}
-
-*/
-
 use std::collections::HashMap;
 
 extern crate mustache;
@@ -72,16 +36,6 @@ use mustache::MapBuilder;
 use mustache::Template;
 use rspten::RspAction;
 use rspten::RspEvent;
-
-struct HasDrop {
-    data: i32,
-}
-
-impl Drop for HasDrop {
-    fn drop(&mut self) {
-        println!("Dropping!");
-    }
-}
 
 impl RspState<KeyI32, MyPageType> for TestState {
     fn get_template_name() -> String {

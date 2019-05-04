@@ -41,38 +41,10 @@ use iron_sessionstorage::SessionStorage;
 
 use iron::Handler;
 use std::collections::HashMap;
+use std::cell::RefCell;
 
 use mustache::MapBuilder;
 use mustache::Template;
-
-pub struct DataCollector {
-    data: Vec<mustache::Data>,
-}
-
-impl DataCollector {
-  fn fill_data(self: &Self, data: mustache::Data) -> () {
-    ()
-  }
-}
-
-impl Debug for DataCollector {
-    fn fmt(self: &Self, formatter: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
-     Ok(())
-    }
-}
-
-impl Default for DataCollector {
-    fn default() -> Self {
-       DataCollector { data: vec![] }
-    }
-}
-
-impl Clone for DataCollector {
-    fn clone(self: &Self) -> Self {
-       DataCollector { data: vec![] }
-    }
-}
-
 
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]
 pub struct HtmlText {
@@ -82,14 +54,6 @@ pub struct HtmlText {
     pub highlight: bool,
     pub hidden: bool,
     pub disabled: bool,
-    #[serde(skip)]
-    dc: DataCollector,
-}
-
-impl Drop for HtmlText {
-  fn drop(&mut self) {
-        println!("Dropping {}!", self.id);
-  }
 }
 
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]
@@ -100,14 +64,12 @@ pub struct HtmlButton {
     pub highlight: bool,
     pub hidden: bool,
     pub disabled: bool,
-    #[serde(skip)]
-    dc: DataCollector,
 }
 
-impl Drop for HtmlButton {
-  fn drop(&mut self) {
-        println!("Dropping {:?}!", self.id);
-  }
+impl HtmlButton {
+    pub fn set_disabled(&mut self, a_disabled: bool) {
+        self.disabled = a_disabled;
+    }
 }
 
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]
@@ -138,13 +100,6 @@ pub struct HtmlSelect<T: PartialEq + Clone + Debug> {
     pub hidden: bool,
     pub disabled: bool,
 }
-
-impl<T> Drop for HtmlSelect<T> where T: PartialEq + Clone + Debug {
-  fn drop(&mut self) {
-        println!("Dropping {:?}!", self.id);
-  }
-}
-
 
 impl<T> HtmlSelect<T>
 where
@@ -224,12 +179,41 @@ macro_rules! html_nested_select {
 
 #[macro_export]
 macro_rules! html_text {
-    ( $elt: ident, $state: ident, $default_state: ident, $modified: ident) => {
-        let mut $elt: HtmlText = Default::default();
+    ( $gd: ident, $elt: ident, $state: ident, $default_state: ident, $modified: ident) => {
+        use std::cell::RefCell;
+        let mut $elt: RefCell<HtmlText> = RefCell::new(Default::default());
+{
+        let mut $elt = $elt.borrow_mut();
         $elt.highlight = $state.$elt != $default_state.$elt;
         $elt.value = $state.$elt.clone();
         $elt.id = format!("{}", stringify!($elt));
         $modified = $modified || $elt.highlight;
+}
+
+        let $gd = || { $gd().insert(stringify!($elt), &$elt).unwrap() }
+    
+    };
+}
+
+#[macro_export]
+macro_rules! html_button {
+    ( $gd: ident, $elt: ident, $label: expr) => {
+        let mut $elt: RefCell<HtmlButton> = RefCell::new(Default::default());
+{
+        let mut $elt = $elt.borrow_mut();
+        $elt.id = format!("{}", stringify!($elt));
+        $elt.value = $label.into();
+}
+        let $gd = || { $gd().insert(stringify!($elt), &$elt).unwrap() }
+    };
+}
+
+#[macro_export]
+macro_rules! html_nested_button {
+    ($parent: ident, $idx: ident,  $elt: ident, $label: expr) => {
+        let mut $elt: HtmlButton = Default::default();
+        $elt.id = format!("{}__{}__{}", stringify!($parent), $idx, stringify!($elt));
+        $elt.value = $label.into();
     };
 }
 
@@ -277,23 +261,6 @@ macro_rules! html_nested_check {
     };
 }
 
-#[macro_export]
-macro_rules! html_button {
-    ( $elt: ident, $label: expr) => {
-        let mut $elt: HtmlButton = Default::default();
-        $elt.id = format!("{}", stringify!($elt));
-        $elt.value = $label.into();
-    };
-}
-
-#[macro_export]
-macro_rules! html_nested_button {
-    ($parent: ident, $idx: ident,  $elt: ident, $label: expr) => {
-        let mut $elt: HtmlButton = Default::default();
-        $elt.id = format!("{}__{}__{}", stringify!($parent), $idx, stringify!($elt));
-        $elt.value = $label.into();
-    };
-}
 
 #[macro_export]
 macro_rules! data_insert {
@@ -434,9 +401,9 @@ pub fn build_response(template: Template, data: MapBuilder) -> iron::Response {
     use iron::headers::ContentType;
     let mut bytes = vec![];
     let data_built = data.build();
-    template
-        .render_data(&mut bytes, &data_built)
-        .expect("Failed to render");
+    template.render_data(&mut bytes, &data_built).expect(
+        "Failed to render",
+    );
     let payload = std::str::from_utf8(&bytes).unwrap();
 
     let mut resp = Response::with((status::Ok, payload));
@@ -566,7 +533,7 @@ where
             Ok(resp)
         } else {
             use iron::headers::Location;
-            // let mut resp = Response::with((status::TemporaryRedirect, $redirect_to.clone()));
+// let mut resp = Response::with((status::TemporaryRedirect, $redirect_to.clone()));
             let mut resp = Response::with((status::Found, redirect_to.clone()));
             resp.headers.set(ContentType::html());
             resp.headers.set(Location(redirect_to));
@@ -614,7 +581,9 @@ fn run_http_server<H: Handler>(service_name: &str, port: u16, handler: H) {
     let bind_ip = env::var("BIND_IP").unwrap_or("127.0.0.1".to_string());
     println!(
         "HTTP server for {} starting on {}:{}",
-        service_name, &bind_ip, port
+        service_name,
+        &bind_ip,
+        port
     );
     iron.http(&format!("{}:{}", &bind_ip, port)).unwrap();
 }

@@ -74,12 +74,11 @@ impl RspState<KeyI32, MyPageType> for TestState {
             modified
         );
 
-        let a_disabled = if state.dd_testing % 2 == 0 {
+        btnTest.borrow_mut().disabled = if state.dd_testing % 2 == 0 {
             true
         } else {
             false
         };
-        btnTest.borrow_mut().disabled = a_disabled;
 
         add_data()
     }

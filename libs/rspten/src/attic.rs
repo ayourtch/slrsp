@@ -39,22 +39,20 @@ use iron_sessionstorage::SessionStorage;
 
 use iron::Handler;
 
-
 use iron::prelude::*;
 use iron::status;
 use mustache::MapBuilder;
 use mustache::Template;
 
-
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]
 pub struct RspPage<S> {
-  frontend_state: Option<S>,
-  initial_state: Option<S>,
-  default_state: S,
-  event: Option<RspEvent>,
-  data: mustache::MapBuilder, 
-  redirect_to: Option<String>,
-  reset_state: bool,
+    frontend_state: Option<S>,
+    initial_state: Option<S>,
+    default_state: S,
+    event: Option<RspEvent>,
+    data: mustache::MapBuilder,
+    redirect_to: Option<String>,
+    reset_state: bool,
 }
 
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]

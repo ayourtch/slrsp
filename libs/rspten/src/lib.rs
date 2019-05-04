@@ -40,8 +40,8 @@ use iron_sessionstorage::backends::SignedCookieBackend;
 use iron_sessionstorage::SessionStorage;
 
 use iron::Handler;
-use std::collections::HashMap;
 use std::cell::RefCell;
+use std::collections::HashMap;
 
 use mustache::MapBuilder;
 use mustache::Template;
@@ -191,7 +191,7 @@ macro_rules! html_text {
 }
 
         let $gd = || { $gd().insert(stringify!($elt), &$elt).unwrap() }
-    
+
     };
 }
 
@@ -260,7 +260,6 @@ macro_rules! html_nested_check {
         $elt.checked = $state.$parent[$idx].$elt;
     };
 }
-
 
 #[macro_export]
 macro_rules! data_insert {
@@ -401,9 +400,9 @@ pub fn build_response(template: Template, data: MapBuilder) -> iron::Response {
     use iron::headers::ContentType;
     let mut bytes = vec![];
     let data_built = data.build();
-    template.render_data(&mut bytes, &data_built).expect(
-        "Failed to render",
-    );
+    template
+        .render_data(&mut bytes, &data_built)
+        .expect("Failed to render");
     let payload = std::str::from_utf8(&bytes).unwrap();
 
     let mut resp = Response::with((status::Ok, payload));
@@ -533,7 +532,7 @@ where
             Ok(resp)
         } else {
             use iron::headers::Location;
-// let mut resp = Response::with((status::TemporaryRedirect, $redirect_to.clone()));
+            // let mut resp = Response::with((status::TemporaryRedirect, $redirect_to.clone()));
             let mut resp = Response::with((status::Found, redirect_to.clone()));
             resp.headers.set(ContentType::html());
             resp.headers.set(Location(redirect_to));
@@ -581,9 +580,7 @@ fn run_http_server<H: Handler>(service_name: &str, port: u16, handler: H) {
     let bind_ip = env::var("BIND_IP").unwrap_or("127.0.0.1".to_string());
     println!(
         "HTTP server for {} starting on {}:{}",
-        service_name,
-        &bind_ip,
-        port
+        service_name, &bind_ip, port
     );
     iron.http(&format!("{}:{}", &bind_ip, port)).unwrap();
 }

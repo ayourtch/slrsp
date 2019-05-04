@@ -109,10 +109,16 @@ impl RspState<KeyI32, MyPageType> for TestState {
     ) -> MapBuilder {
         let mut data = data;
         let mut modified = false;
-        let add_data = || { data };
-        
+        let add_data = || data;
+
         html_button!(add_data, btnTest, "Test");
-        html_text!(add_data, txt_text_message, state, curr_initial_state, modified);
+        html_text!(
+            add_data,
+            txt_text_message,
+            state,
+            curr_initial_state,
+            modified
+        );
 
         let a_disabled = if state.dd_testing % 2 == 0 {
             true
@@ -120,7 +126,7 @@ impl RspState<KeyI32, MyPageType> for TestState {
             false
         };
         btnTest.borrow_mut().disabled = a_disabled;
-        
+
         add_data()
     }
 

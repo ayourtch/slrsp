@@ -132,6 +132,7 @@ where
         }
     }
 }
+
 impl HtmlSelect<String> {
     pub fn item1(self: &mut HtmlSelect<String>, user_label: &str) {
         let i = HtmlSelectItem::<String> {
@@ -146,12 +147,16 @@ impl HtmlSelect<String> {
 
 #[macro_export]
 macro_rules! html_select {
-    ( $elt: ident, $from: expr , $state: ident, $default_state: ident, $modified: ident) => {
-        let mut $elt = $from;
-        $elt.set_selected_value(&mut $state.$elt);
-        $elt.highlight = $state.$elt != $default_state.$elt;
-        $elt.id = format!("{}", stringify!($elt));
-        $modified = $modified || $elt.highlight;
+    ( $gd: ident, $elt: ident, $from: expr , $state: ident, $default_state: ident, $modified: ident) => {
+        let mut $elt = RefCell::new($from.clone());
+        {
+            let mut $elt = $elt.borrow_mut();
+            $elt.set_selected_value(&mut $state.$elt);
+            $elt.highlight = $state.$elt != $default_state.$elt;
+            $elt.id = format!("{}", stringify!($elt));
+            $modified = $modified || $elt.highlight;
+        }
+        let $gd = || { $gd().insert(stringify!($elt), &$elt).unwrap() }
     };
 }
 
@@ -168,31 +173,30 @@ macro_rules! html_nested_select {
 
 #[macro_export]
 macro_rules! html_text {
-    ( $gd: ident, $elt: ident, $state: ident, $default_state: ident, $modified: ident) => {
+    ($gd: ident, $elt: ident, $state: ident, $default_state: ident, $modified: ident) => {
         use std::cell::RefCell;
         let mut $elt: RefCell<HtmlText> = RefCell::new(Default::default());
-{
-        let mut $elt = $elt.borrow_mut();
-        $elt.highlight = $state.$elt != $default_state.$elt;
-        $elt.value = $state.$elt.clone();
-        $elt.id = format!("{}", stringify!($elt));
-        $modified = $modified || $elt.highlight;
-}
+        {
+            let mut $elt = $elt.borrow_mut();
+            $elt.highlight = $state.$elt != $default_state.$elt;
+            $elt.value = $state.$elt.clone();
+            $elt.id = format!("{}", stringify!($elt));
+            $modified = $modified || $elt.highlight;
+        }
 
         let $gd = || { $gd().insert(stringify!($elt), &$elt).unwrap() }
-
     };
 }
 
 #[macro_export]
 macro_rules! html_button {
-    ( $gd: ident, $elt: ident, $label: expr) => {
+    ($gd: ident, $elt: ident, $label: expr) => {
         let mut $elt: RefCell<HtmlButton> = RefCell::new(Default::default());
-{
-        let mut $elt = $elt.borrow_mut();
-        $elt.id = format!("{}", stringify!($elt));
-        $elt.value = $label.into();
-}
+        {
+            let mut $elt = $elt.borrow_mut();
+            $elt.id = format!("{}", stringify!($elt));
+            $elt.value = $label.into();
+        }
         let $gd = || { $gd().insert(stringify!($elt), &$elt).unwrap() }
     };
 }
@@ -295,7 +299,16 @@ pub fn req_get_event(req: &mut Request) -> RspEvent {
                         event = "submit".into();
                         target = a["submit".len()..].into();
                     }
-                    _ => {}
+                    _ => match hashmap.keys().into_iter().find(|x| x.starts_with("btn")) {
+                        Some(a) => {
+                            event = "submit".into();
+                            target = a.clone();
+                        }
+                        _ => {}
+                    },
+                }
+                if &event=="submit" {
+
                 }
             }
         }
@@ -421,7 +434,7 @@ where
         data: MapBuilder,
         ev: &RspEvent,
         curr_key: &T,
-        state: &Self,
+        state: &mut Self,
         initial_state: &Self,
         curr_initial_state: &Self,
     ) -> MapBuilder {
@@ -490,13 +503,13 @@ where
             }
             let mut data = MapBuilder::new();
             let template = get_page_template!(&Self::get_template_name());
-            let state = maybe_state.unwrap();
+            let mut state = maybe_state.unwrap();
             let initial_state = maybe_initial_state.unwrap();
             data = Self::fill_data(
                 data,
                 &event,
                 &key,
-                &state,
+                &mut state,
                 &initial_state,
                 &curr_initial_state,
             );

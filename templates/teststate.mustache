@@ -27,7 +27,8 @@ key = {{state_key.id}}
 
 
 <form method="post">
-{{#btnTest}} <input type="submit" {{> props }} style="{{> style }}" /> {{/btnTest}}
+{{#btnTest}} {{> html_submit}} {{/btnTest}}
+{{#ddMyDropdown}} {{>html_select}} {{/ddMyDropdown}}
 <input type="hidden" name="state" value="{{state_json}}">
 <input type="hidden" name="initial_state" value="{{initial_state_json}}">
 <input type="submit" name="submit_lt" value="<">

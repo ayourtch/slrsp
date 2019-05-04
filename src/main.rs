@@ -30,12 +30,22 @@ struct KeyI32 {
 struct TestState {
     dd_testing: i32,
     txt_text_message: String,
+    ddMyDropdown: i32,
 }
 
 use mustache::MapBuilder;
 use mustache::Template;
 use rspten::RspAction;
 use rspten::RspEvent;
+
+fn dbh_get_dropdown(switchtype: i32) -> HtmlSelect<i32> {
+    let mut dd: HtmlSelect<i32> = Default::default();
+    dd.item(" --- ".into(), -1);
+    for i in 1..23 {
+      dd.item(&format!("item {}", i), i);
+    }
+    dd
+}
 
 impl RspState<KeyI32, MyPageType> for TestState {
     fn get_template_name() -> String {
@@ -51,24 +61,27 @@ impl RspState<KeyI32, MyPageType> for TestState {
         TestState {
             dd_testing: -1,
             txt_text_message: "test".to_string(),
+            ddMyDropdown: -1,
         }
     }
     fn fill_data(
         data: MapBuilder,
         ev: &RspEvent,
         curr_key: &KeyI32,
-        state: &Self,
+        state: &mut Self,
         initial_state: &Self,
         curr_initial_state: &Self,
     ) -> MapBuilder {
-        let mut data = data;
         let mut modified = false;
-        let add_data = || data;
+        let gd = || data;
 
-        html_button!(add_data, btnTest, "Test");
-        html_text!(
-            add_data,
-            txt_text_message,
+        html_button!(gd, btnTest, "Test");
+        html_text!(gd, txt_text_message, state, curr_initial_state, modified);
+
+        html_select!(
+            gd,
+            ddMyDropdown,
+            dbh_get_dropdown(curr_key.id.unwrap_or(-1)),
             state,
             curr_initial_state,
             modified
@@ -80,7 +93,7 @@ impl RspState<KeyI32, MyPageType> for TestState {
             false
         };
 
-        add_data()
+        gd()
     }
 
     fn event_handler(

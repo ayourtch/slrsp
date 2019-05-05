@@ -234,12 +234,16 @@ macro_rules! html_nested_text {
 
 #[macro_export]
 macro_rules! html_check {
-    ( $elt: ident, $state: ident, $default_state: ident, $modified: ident) => {
-        let mut $elt: HtmlCheck = Default::default();
-        $elt.highlight = $state.$elt != $default_state.$elt;
-        $modified = $modified || $elt.highlight;
-        $elt.id = format!("{}", stringify!($elt));
-        $elt.checked = $state.$elt;
+    ( $gd: ident, $elt: ident, $state: ident, $default_state: ident, $modified: ident) => {
+        let mut $elt: RefCell<HtmlCheck> = RefCell::new(Default::default());
+        {
+            let mut $elt = $elt.borrow_mut();
+            $elt.highlight = $state.$elt != $default_state.$elt;
+            $modified = $modified || $elt.highlight;
+            $elt.id = format!("{}", stringify!($elt));
+            $elt.checked = $state.$elt;
+        }
+        let $gd = || { $gd().insert(stringify!($elt), &$elt).unwrap() }
     };
 }
 

@@ -30,6 +30,7 @@ struct KeyI32 {
 struct TestState {
     dd_testing: i32,
     txt_text_message: String,
+    cbTestCheck: bool,
     ddMyDropdown: i32,
 }
 
@@ -61,7 +62,8 @@ impl RspState<KeyI32, MyPageType> for TestState {
         TestState {
             dd_testing: -1,
             txt_text_message: "test".to_string(),
-            ddMyDropdown: -1,
+            ddMyDropdown: key.id.unwrap_or(-1),
+            cbTestCheck: true,
         }
     }
     fn fill_data(
@@ -77,6 +79,7 @@ impl RspState<KeyI32, MyPageType> for TestState {
 
         html_button!(gd, btnTest, "Test");
         html_text!(gd, txt_text_message, state, curr_initial_state, modified);
+        html_check!(gd, cbTestCheck, state, curr_initial_state, modified);
 
         html_select!(
             gd,

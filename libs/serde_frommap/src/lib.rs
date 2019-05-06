@@ -7,7 +7,7 @@ pub use self::err::{Error, Result};
 pub mod err;
 pub mod de;
 
-use crate::de::from_map;
+pub use crate::de::from_map;
 use std::collections::HashMap;
 
 #[macro_use]
@@ -19,14 +19,17 @@ fn test_struct() {
     struct Test {
         int: u32,
         boolean: bool,
+        int2: i32,
     }
 
     let mut hm: HashMap<String, Vec<String>> = HashMap::new();
     hm.insert("int".into(), vec!["1".into()]);
+    hm.insert("int2".into(), vec!["-23".into()]);
     hm.insert("boolean".into(), vec!["false".into()]);
 
     let expected = Test {
         int: 1,
+        int2: -23,
         boolean: false,
     };
     assert_eq!(expected, from_map(&hm).unwrap());

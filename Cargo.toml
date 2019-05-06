@@ -6,6 +6,7 @@ authors = ["Andrew Yourtchenko <ayourtch@gmail.com>"]
 [dependencies]
 rspten = { path = "libs/rspten" }
 rspten_derive = { path = "libs/rspten_derive" }
+serde_frommap = { path = "libs/serde_frommap" }
 
 
 serde_json = "*"

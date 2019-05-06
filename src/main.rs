@@ -7,6 +7,7 @@ extern crate router;
 extern crate serde_derive;
 extern crate serde;
 extern crate serde_json;
+extern crate serde_frommap;
 
 #[macro_use]
 extern crate rspten;
@@ -48,11 +49,23 @@ fn dbh_get_dropdown(switchtype: i32) -> HtmlSelect<i32> {
     dd
 }
 
+fn dbh_get_testing_dropdown(switchtype: i32) -> HtmlSelect<i32> {
+    let mut dd: HtmlSelect<i32> = Default::default();
+    dd.item(" --- ".into(), -1);
+    for i in 1..23 {
+      dd.item(&format!("testing item {}", i), i);
+    }
+    dd
+}
+
 impl RspState<KeyI32, MyPageType> for TestState {
     fn get_template_name() -> String {
         "teststate".to_string()
     }
     fn get_key(args: &HashMap<String, Vec<String>>, _maybe_state: &Option<TestState>) -> KeyI32 {
+        use serde_frommap;
+        let foo: Result<TestState, _> = serde_frommap::from_map(args);
+        println!("foo: {:#?}", &foo);
         KeyI32 {
             id: args.get("id").map_or(None, |x| x[0].parse::<i32>().ok()),
         }
@@ -85,6 +98,14 @@ impl RspState<KeyI32, MyPageType> for TestState {
             gd,
             ddMyDropdown,
             dbh_get_dropdown(curr_key.id.unwrap_or(-1)),
+            state,
+            curr_initial_state,
+            modified
+        );
+        html_select!(
+            gd,
+            dd_testing,
+            dbh_get_testing_dropdown(curr_key.id.unwrap_or(-1)),
             state,
             curr_initial_state,
             modified

@@ -29,7 +29,9 @@ key = {{state_key.id}}
 <form method="post">
 {{#btnTest}} {{> html_submit}} {{/btnTest}}
 {{#ddMyDropdown}} {{>html_select}} {{/ddMyDropdown}}
+{{#dd_testing}} {{>html_select}} {{/dd_testing}}
 {{#cbTestCheck}} {{> html_checkbox }} {{/cbTestCheck}}
+<input type="text" name="txt_text_message" value=""/>
 <input type="hidden" name="state" value="{{state_json}}">
 <input type="hidden" name="initial_state" value="{{initial_state_json}}">
 <input type="submit" name="submit_lt" value="<">

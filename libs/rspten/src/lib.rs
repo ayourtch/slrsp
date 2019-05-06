@@ -22,6 +22,7 @@ extern crate diesel;
 extern crate serde_derive;
 extern crate serde;
 extern crate serde_json;
+extern crate serde_frommap;
 
 // #[macro_use]
 extern crate params;
@@ -418,7 +419,7 @@ pub fn build_response(template: Template, data: MapBuilder) -> iron::Response {
 
 pub trait RspState<T, PT>
 where
-    Self: std::marker::Sized + serde::Serialize + serde::de::DeserializeOwned + Clone,
+    Self: std::marker::Sized + serde::Serialize + serde::de::DeserializeOwned + Clone + Debug,
     PT: RspPageType,
     T: serde::Serialize + Clone,
 {
@@ -447,7 +448,7 @@ where
 
     fn handler(req: &mut Request) -> IronResult<Response> {
         use iron::headers::ContentType;
-        use urlencoded::UrlEncodedQuery;
+        use urlencoded::{UrlEncodedQuery, UrlEncodedBody};
 
         let maybe_res: Result<Self, serde_json::Error> =
             serde_json::from_str(&req_get_state_string(req));
@@ -462,6 +463,16 @@ where
 
         let maybe_res: Result<Self, serde_json::Error> =
             serde_json::from_str(&req_get_initial_state_string(req));
+
+        let state2: Result<Self, serde_frommap::Error> = match req.get_ref::<UrlEncodedBody>() {
+            Ok(ref hashmap) => {
+                let res: Result<Self, _> = serde_frommap::from_map(&hashmap);
+                res
+            },
+            _ => { let hm: HashMap<String, Vec<String>> = HashMap::new(); serde_frommap::from_map(&hm) }
+        };
+        println!("state2: {:#?}", &state2);
+
         let mut maybe_initial_state = maybe_res.ok();
 
         let mut key = match req.get_ref::<UrlEncodedQuery>() {

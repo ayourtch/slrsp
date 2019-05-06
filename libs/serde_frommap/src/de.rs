@@ -87,6 +87,7 @@ impl<'de> Deserializer<'de> {
         }
     }
 
+
     // Parse a group of decimal digits as an unsigned integer of type T.
     //
     // This implementation is a bit too lenient, for example `001` is not
@@ -140,10 +141,34 @@ impl<'de> Deserializer<'de> {
     // signed integer of type T.
     fn parse_signed<T>(&mut self) -> Result<T>
     where
-        T: Neg<Output = T> + AddAssign<T> + MulAssign<T> + From<i8>,
+        T: Neg<Output = T> + AddAssign<T> + MulAssign<T> + From<i8> + std::fmt::Debug,
     {
         // Optional minus sign, delegate to `parse_unsigned`, negate if negative.
-        unimplemented!()
+        if let Some((k, v)) = self.kv {
+            let mut int = T::from(0);
+            let si = if v[0].starts_with("-") {
+                1 } else { 0 };
+            for ch in v[0][si..].chars() {
+                match ch {
+                    ch @ '0'...'9' => {
+                        int *= T::from(10);
+                        int += T::from((ch as u8 - b'0') as i8);
+                    }
+                    _ => {
+                        return Ok(int);
+                    }
+                }
+            }
+            if si > 0 {
+                int = -int;
+            }
+            println!("Parsed: {:?}", &int);
+            return Ok(int);
+           
+        } else {
+            return Err(Error::ExpectedInteger);
+        }
+        // unimplemented!()
     }
 
     // Parse a string until the next '"' character.
@@ -151,6 +176,11 @@ impl<'de> Deserializer<'de> {
     // Makes no attempt to handle escape sequences. What did you expect? This is
     // example code!
     fn parse_string(&mut self) -> Result<&'de str> {
+        if let Some((k, v)) = self.kv {
+            return Ok(&v[0]);
+        } else {
+            return Err(Error::ExpectedString);
+        }
         unimplemented!()
         /*
         if self.next_char()? != '"' {
@@ -193,6 +223,7 @@ impl<'de, 'a> MapAccess<'de> for &'a mut Deserializer<'de> {
         if self.kv.is_none() {
             return Ok(None);
         }
+        println!("kv: {:?}", &self.kv);
         seed.deserialize(&mut **self).map(Some)
     }
 

@@ -5,7 +5,7 @@ pub struct KeyI32 {
     id: Option<i32>,
 }
 
-#[derive(RspHandlers, Debug, Clone, Serialize, Deserialize)]
+#[derive(RspHandlers, RspTraits, Debug, Clone, Serialize, Deserialize)]
 #[table = "TableFoo"]
 pub struct PageState {
     dd_testing: i32,
@@ -38,9 +38,6 @@ fn dbh_get_testing_dropdown(switchtype: i32) -> HtmlSelect<i32> {
 }
 
 impl RspState<KeyI32, MyPageType> for PageState {
-    fn get_template_name() -> String {
-        "teststate".to_string()
-    }
     fn get_key(args: &HashMap<String, Vec<String>>, _maybe_state: &Option<PageState>) -> KeyI32 {
         KeyI32 {
             id: args.get("id").map_or(None, |x| x[0].parse::<i32>().ok()),

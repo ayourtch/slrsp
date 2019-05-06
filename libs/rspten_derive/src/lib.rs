@@ -7,6 +7,23 @@ extern crate syn;
 // use crate::proc_macro::TokenStream;
 use quote::quote;
 // use syn;
+use syn::DeriveInput;
+
+#[proc_macro_derive(RspTraits, attributes(html, table, field))]
+pub fn rsp_traits_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    use crate::proc_macro::TokenStream;
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = &input.ident;
+    let expanded = quote! {
+       impl RspStateName for #name {
+          fn get_template_name() -> String {
+             // stringify!(#name).to_string()
+             module_path!().split("::").last().unwrap().to_string()
+          }
+       }
+    };
+    TokenStream::from(expanded)
+}
 
 #[proc_macro_derive(RspHandlers, attributes(html, table, field))]
 pub fn rsp_handlers_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -14,6 +31,7 @@ pub fn rsp_handlers_derive(input: proc_macro::TokenStream) -> proc_macro::TokenS
     // that we can manipulate
     let mut ast = syn::parse(input).unwrap();
     let mut output = proc_macro::TokenStream::new();
+
 
     // Build the trait implementation
     let gen: proc_macro2::TokenStream = impl_hello_macro(&mut ast).into();

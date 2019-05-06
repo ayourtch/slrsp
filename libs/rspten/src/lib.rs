@@ -415,15 +415,18 @@ pub fn build_response(template: Template, data: MapBuilder) -> iron::Response {
     resp
 }
 
+pub trait RspStateName {
+    fn get_template_name() -> String;
+}
+
 pub trait RspState<T, PT>
 where
-    Self: std::marker::Sized + serde::Serialize + serde::de::DeserializeOwned + Clone + Debug,
+    Self: std::marker::Sized + serde::Serialize + serde::de::DeserializeOwned + Clone + Debug + RspStateName,
     PT: RspPageType,
     T: serde::Serialize + Clone,
 {
     fn get_key(args: &HashMap<String, Vec<String>>, maybe_state: &Option<Self>) -> T;
     fn get_state(key: T) -> Self;
-    fn get_template_name() -> String;
 
     fn event_handler(
         ev: &RspEvent,

@@ -1,4 +1,5 @@
 use super::imports::*;
+use pages::html_helpers::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyI32 {
@@ -17,24 +18,6 @@ pub struct PageState {
 
 fn bool_false() -> bool {
     false
-}
-
-fn dbh_get_dropdown(switchtype: i32) -> HtmlSelect<i32> {
-    let mut dd: HtmlSelect<i32> = Default::default();
-    dd.item(" --- ".into(), -1);
-    for i in 1..23 {
-        dd.item(&format!("item {}", i), i);
-    }
-    dd
-}
-
-fn dbh_get_testing_dropdown(switchtype: i32) -> HtmlSelect<i32> {
-    let mut dd: HtmlSelect<i32> = Default::default();
-    dd.item(" --- ".into(), -1);
-    for i in 1..23 {
-        dd.item(&format!("testing item {}", i), i);
-    }
-    dd
 }
 
 impl RspState<KeyI32, MyPageType> for PageState {

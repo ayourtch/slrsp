@@ -119,6 +119,8 @@ impl RspState<KeyI32, MyPageType> for TestState {
             false
         };
 
+        let gd = || gd().insert("modified", &modified).unwrap();
+
         gd()
     }
 

@@ -20,12 +20,7 @@ use rspten::*;
 mod pages;
 
 fn main() {
-    use router::Router;
-
-    let mut router = Router::new();
-    router.get("/", pages::teststate::PageState::handler, "/");
-    router.post("/", pages::teststate::PageState::handler, "/");
-    router.get("/x", pages::test2state::PageState::handler, "/x");
+    let mut router = pages::get_router();
 
     let mut s = rspten::RspServer::new();
 

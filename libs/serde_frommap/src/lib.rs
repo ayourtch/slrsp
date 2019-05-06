@@ -8,7 +8,7 @@
 //! Serde makes it easy to provide a deserializable struct with its [deriveable Deserialize](https://serde.rs/derive.html)
 //! procedural macro.
 //!
-//! Simply ask for an instance of that struct from envy's `from_env` function.
+//! Simply ask for an instance of that struct from envy's `from_map` function.
 //!
 //! ```no_run
 //! use serde::Deserialize;
@@ -24,7 +24,7 @@
 //! }
 //!
 //! fn main() {
-//!    match serde_frommap::from_env::<Config>() {
+//!    match serde_frommap::from_map::<Config>() {
 //!       Ok(config) => println!("{:#?}", config),
 //!       Err(error) => panic!("{:#?}", error)
 //!    }
@@ -59,7 +59,7 @@
 //!
 //! fn main() {
 //!    // set env var for size as `SIZE=medium`
-//!    match serde_frommap::from_env::<Config>() {
+//!    match serde_frommap::from_map::<Config>() {
 //!       Ok(config) => println!("{:#?}", config),
 //!       Err(error) => panic!("{:#?}", error)
 //!    }
@@ -75,7 +75,7 @@ use serde::de::{
     value::{MapDeserializer, SeqDeserializer},
     IntoDeserializer,
 };
-use std::{borrow::Cow, env, iter::IntoIterator};
+use std::{borrow::Cow, collections::HashMap, iter::IntoIterator};
 
 // Ours
 mod error;
@@ -114,7 +114,7 @@ impl<Iter: Iterator<Item = (String, String)>> Iterator for Vars<Iter> {
     fn next(&mut self) -> Option<Self::Item> {
         self.0
             .next()
-            .map(|(k, v)| (VarName(k.to_lowercase()), Val(k, v)))
+            .map(|(k, v)| (VarName(k.clone()), Val(k, v)))
     }
 }
 
@@ -166,8 +166,20 @@ impl<'de> de::Deserializer<'de> for Val {
         visitor.visit_some(self)
     }
 
+    fn deserialize_bool<V>(self, visitor: V) -> Result<V::Value>
+    where
+        V: de::Visitor<'de>,
+    {
+        println!("Deserialize {}", &self.1);
+        let mut val = false;
+        if self.1 == "on" {
+            val = true;
+        }
+        val.into_deserializer().deserialize_bool(visitor)
+    }
+
+
     forward_parsed_values! {
-        bool => deserialize_bool,
         u8 => deserialize_u8,
         u16 => deserialize_u16,
         u32 => deserialize_u32,
@@ -278,11 +290,11 @@ impl<'de, Iter: Iterator<Item = (String, String)>> de::Deserializer<'de>
 }
 
 /// Deserializes a type based on information stored in env variables
-pub fn from_env<T>() -> Result<T>
+pub fn from_map<T>(m: &HashMap<String, Vec<String>>) -> Result<T>
 where
     T: de::DeserializeOwned,
 {
-    from_iter(env::vars())
+    from_iter(m.iter().map(|(k, v)| (k.to_string(), v[0].clone())))
 }
 
 /// Deserializes a type based on an iterable of `(String, String)`
@@ -302,11 +314,11 @@ pub struct Prefixed<'a>(Cow<'a, str>);
 
 impl<'a> Prefixed<'a> {
     /// Deserializes a type based on prefixed env varables
-    pub fn from_env<T>(&self) -> Result<T>
+    pub fn from_map<T>(&self, m: &HashMap<String, Vec<String>>) -> Result<T>
     where
         T: de::DeserializeOwned,
     {
-        self.from_iter(env::vars())
+        self.from_iter(m.iter().map(|(k, v)| (k.to_string(), v[0].clone())))
     }
 
     /// Deserializes a type based on prefixed (String, String) tuples
@@ -348,7 +360,7 @@ impl<'a> Prefixed<'a> {
 /// fn main() {
 ///    // all env variables will be expected to be prefixed with APP_
 ///    // i.e. APP_FOO, APP_BAR, ect
-///    match serde_frommap::prefixed("APP_").from_env::<Config>() {
+///    match serde_frommap::prefixed("APP_").from_map::<Config>() {
 ///       Ok(config) => println!("{:#?}", config),
 ///       Err(error) => panic!("{:#?}", error)
 ///    }

@@ -31,8 +31,13 @@ struct KeyI32 {
 struct TestState {
     dd_testing: i32,
     txt_text_message: String,
+#[serde(default)]
     cbTestCheck: bool,
     ddMyDropdown: i32,
+}
+
+fn bool_false() -> bool {
+    false
 }
 
 use mustache::MapBuilder;
@@ -63,9 +68,6 @@ impl RspState<KeyI32, MyPageType> for TestState {
         "teststate".to_string()
     }
     fn get_key(args: &HashMap<String, Vec<String>>, _maybe_state: &Option<TestState>) -> KeyI32 {
-        use serde_frommap;
-        let foo: Result<TestState, _> = serde_frommap::from_map(args);
-        println!("foo: {:#?}", &foo);
         KeyI32 {
             id: args.get("id").map_or(None, |x| x[0].parse::<i32>().ok()),
         }

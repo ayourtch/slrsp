@@ -31,8 +31,7 @@ key = {{state_key.id}}
 {{#ddMyDropdown}} {{>html_select}} {{/ddMyDropdown}}
 {{#dd_testing}} {{>html_select}} {{/dd_testing}}
 {{#cbTestCheck}} {{> html_checkbox }} {{/cbTestCheck}}
-<input type="text" name="txt_text_message" value=""/>
-<input type="hidden" name="state" value="{{state_json}}">
+{{#txt_text_message}} {{> html_text }} {{/txt_text_message}}
 <input type="hidden" name="initial_state" value="{{initial_state_json}}">
 <input type="submit" name="submit_lt" value="<">
 <input type="submit" name="submit_eq" value="=">

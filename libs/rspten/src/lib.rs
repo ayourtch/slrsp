@@ -450,10 +450,19 @@ where
         use iron::headers::ContentType;
         use urlencoded::{UrlEncodedQuery, UrlEncodedBody};
 
-        let maybe_res: Result<Self, serde_json::Error> =
-            serde_json::from_str(&req_get_state_string(req));
+        let form_state_res: Result<Self, serde_frommap::Error> = match req.get_ref::<UrlEncodedBody>() {
+            Ok(ref hashmap) => {
+                let res: Result<Self, _> = serde_frommap::from_map(&hashmap);
+                res
+            },
+            _ => { let hm: HashMap<String, Vec<String>> = HashMap::new(); serde_frommap::from_map(&hm) }
+        };
+        println!("form_state_res: {:#?}", &form_state_res);
 
-        let mut maybe_state = match maybe_res {
+        /* let maybe_res: Result<Self, serde_json::Error> =
+            serde_json::from_str(&req_get_state_string(req)); */
+
+        let mut maybe_state = match form_state_res {
             Ok(s) => Some(s),
             Err(e) => {
                 println!("Error deserializing state: {:?}", e);
@@ -464,14 +473,6 @@ where
         let maybe_res: Result<Self, serde_json::Error> =
             serde_json::from_str(&req_get_initial_state_string(req));
 
-        let state2: Result<Self, serde_frommap::Error> = match req.get_ref::<UrlEncodedBody>() {
-            Ok(ref hashmap) => {
-                let res: Result<Self, _> = serde_frommap::from_map(&hashmap);
-                res
-            },
-            _ => { let hm: HashMap<String, Vec<String>> = HashMap::new(); serde_frommap::from_map(&hm) }
-        };
-        println!("state2: {:#?}", &state2);
 
         let mut maybe_initial_state = maybe_res.ok();
 

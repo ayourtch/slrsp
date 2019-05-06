@@ -10,7 +10,7 @@ pub struct KeyI32 {
 pub struct PageState {
     dd_testing: i32,
     txt_text_message: String,
-#[serde(default)]
+    #[serde(default)]
     cbTestCheck: bool,
     ddMyDropdown: i32,
 }
@@ -23,7 +23,7 @@ fn dbh_get_dropdown(switchtype: i32) -> HtmlSelect<i32> {
     let mut dd: HtmlSelect<i32> = Default::default();
     dd.item(" --- ".into(), -1);
     for i in 1..23 {
-      dd.item(&format!("item {}", i), i);
+        dd.item(&format!("item {}", i), i);
     }
     dd
 }
@@ -32,7 +32,7 @@ fn dbh_get_testing_dropdown(switchtype: i32) -> HtmlSelect<i32> {
     let mut dd: HtmlSelect<i32> = Default::default();
     dd.item(" --- ".into(), -1);
     for i in 1..23 {
-      dd.item(&format!("testing item {}", i), i);
+        dd.item(&format!("testing item {}", i), i);
     }
     dd
 }
@@ -126,4 +126,3 @@ impl RspState<KeyI32, MyPageType> for PageState {
         rspten::RspAction::Render
     }
 }
-

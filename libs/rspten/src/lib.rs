@@ -21,8 +21,8 @@ extern crate diesel;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde;
-extern crate serde_json;
 extern crate serde_frommap;
+extern crate serde_json;
 
 // #[macro_use]
 extern crate params;
@@ -312,9 +312,7 @@ pub fn req_get_event(req: &mut Request) -> RspEvent {
                         _ => {}
                     },
                 }
-                if &event=="submit" {
-
-                }
+                if &event == "submit" {}
             }
         }
         Err(ref e) => {
@@ -448,19 +446,23 @@ where
 
     fn handler(req: &mut Request) -> IronResult<Response> {
         use iron::headers::ContentType;
-        use urlencoded::{UrlEncodedQuery, UrlEncodedBody};
+        use urlencoded::{UrlEncodedBody, UrlEncodedQuery};
 
-        let form_state_res: Result<Self, serde_frommap::Error> = match req.get_ref::<UrlEncodedBody>() {
-            Ok(ref hashmap) => {
-                let res: Result<Self, _> = serde_frommap::from_map(&hashmap);
-                res
-            },
-            _ => { let hm: HashMap<String, Vec<String>> = HashMap::new(); serde_frommap::from_map(&hm) }
-        };
+        let form_state_res: Result<Self, serde_frommap::Error> =
+            match req.get_ref::<UrlEncodedBody>() {
+                Ok(ref hashmap) => {
+                    let res: Result<Self, _> = serde_frommap::from_map(&hashmap);
+                    res
+                }
+                _ => {
+                    let hm: HashMap<String, Vec<String>> = HashMap::new();
+                    serde_frommap::from_map(&hm)
+                }
+            };
         println!("form_state_res: {:#?}", &form_state_res);
 
         /* let maybe_res: Result<Self, serde_json::Error> =
-            serde_json::from_str(&req_get_state_string(req)); */
+        serde_json::from_str(&req_get_state_string(req)); */
 
         let mut maybe_state = match form_state_res {
             Ok(s) => Some(s),
@@ -472,7 +474,6 @@ where
 
         let maybe_res: Result<Self, serde_json::Error> =
             serde_json::from_str(&req_get_initial_state_string(req));
-
 
         let mut maybe_initial_state = maybe_res.ok();
 

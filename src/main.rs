@@ -6,8 +6,8 @@ extern crate router;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde;
-extern crate serde_json;
 extern crate serde_frommap;
+extern crate serde_json;
 
 #[macro_use]
 extern crate rspten;

@@ -17,5 +17,3 @@ pub fn dbh_get_testing_dropdown(switchtype: i32) -> HtmlSelect<i32> {
     }
     dd
 }
-
-

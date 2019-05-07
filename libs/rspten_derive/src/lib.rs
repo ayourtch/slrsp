@@ -9,6 +9,57 @@ use quote::quote;
 // use syn;
 use syn::DeriveInput;
 
+use proc_macro::TokenStream;
+use syn::{braced, parse_macro_input, token, Field, Ident, LitStr, Result, Token};
+
+use syn::parse::{Parse, ParseStream, Result as ParseResult};
+
+struct Foo {
+    name: syn::Ident,
+    path: String,
+}
+
+impl Parse for Foo {
+    fn parse(input: ParseStream) -> ParseResult<Self> {
+        let name = input.parse::<Ident>()?;
+        let path = input.parse::<LitStr>()?.value();
+
+        Ok(Foo { name, path })
+    }
+}
+
+#[proc_macro]
+pub fn make_get_router(tokens: TokenStream) -> TokenStream {
+    use crate::proc_macro::TokenStream;
+    use syn::parse::Parser;
+    use syn::punctuated::Punctuated;
+    use syn::Item;
+
+    let parser = Punctuated::<Foo, Token![,]>::parse_terminated;
+    let args = parser.parse(tokens).unwrap();
+
+    let def_start = "pub fn get_router() -> router::Router { use router::Router; let mut router = Router::new();";
+    let def_end = " router }";
+
+    let mut def_acc = "".to_string();
+
+    for a in args {
+        let n = a.name.to_string();
+        let p = a.path;
+        def_acc.push_str(&format!("#[path=\"{}.rs\"] mod {};", &n, &n));
+        def_acc.push_str(&format!(
+            "router.get(\"{}\", {}::PageState::handler, \"{}\");",
+            &p, &n, &p
+        ));
+        def_acc.push_str(&format!(
+            "router.post(\"{}\", {}::PageState::handler, \"{}\");",
+            &p, &n, &p
+        ));
+    }
+    let full_def = format!("{}{}{}", def_start, def_acc, def_end);
+    full_def.parse().unwrap()
+}
+
 #[proc_macro_derive(RspTraits, attributes(html, table, field))]
 pub fn rsp_traits_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     use crate::proc_macro::TokenStream;
@@ -31,7 +82,6 @@ pub fn rsp_handlers_derive(input: proc_macro::TokenStream) -> proc_macro::TokenS
     // that we can manipulate
     let mut ast = syn::parse(input).unwrap();
     let mut output = proc_macro::TokenStream::new();
-
 
     // Build the trait implementation
     let gen: proc_macro2::TokenStream = impl_hello_macro(&mut ast).into();

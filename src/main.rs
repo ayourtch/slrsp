@@ -18,6 +18,7 @@ use rspten::RspState;
 use rspten::*;
 
 mod pages;
+mod html_helpers;
 
 fn main() {
     let mut router = pages::get_router();

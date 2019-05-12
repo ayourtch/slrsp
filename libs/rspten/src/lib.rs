@@ -274,8 +274,6 @@ pub enum RspAction<T> {
     RedirectTo(String),
 }
 
-pub trait RspPageType {}
-
 pub fn maybe_compile_template(name: &str) -> Result<Template, mustache::Error> {
     let fname = format!("./templates/{}.mustache", name);
     println!("Compiling: {}", &fname);
@@ -319,10 +317,26 @@ pub trait RspStateName {
     fn get_template_name() -> String;
 }
 
-pub trait RspState<T, PT>
+pub enum RspAuthAction {
+    Render,
+    RedirectTo(String),
+}
+
+pub trait RspUserAuth {
+    fn from_request(req: &mut Request) -> Self;
+    fn auth_action(auth: &Self) -> RspAuthAction;
+    fn has_rights(auth: &Self, rights: &str) -> bool;
+}
+
+pub trait RspState<T, TA>
 where
-    Self: std::marker::Sized + serde::Serialize + serde::de::DeserializeOwned + Clone + Debug + RspStateName,
-    PT: RspPageType,
+    Self: std::marker::Sized
+        + serde::Serialize
+        + serde::de::DeserializeOwned
+        + Clone
+        + Debug
+        + RspStateName,
+    TA: RspUserAuth,
     T: serde::Serialize + Clone,
 {
     fn get_key(args: &HashMap<String, Vec<String>>, maybe_state: &Option<Self>) -> T;
@@ -350,116 +364,127 @@ where
     fn handler(req: &mut Request) -> IronResult<Response> {
         use iron::headers::ContentType;
         use urlencoded::{UrlEncodedBody, UrlEncodedQuery};
-
-        let form_state_res: Result<Self, serde_frommap::Error> =
-            match req.get_ref::<UrlEncodedBody>() {
-                Ok(ref hashmap) => {
-                    let res: Result<Self, _> = serde_frommap::from_map(&hashmap);
-                    res
-                }
-                _ => {
-                    let hm: HashMap<String, Vec<String>> = HashMap::new();
-                    serde_frommap::from_map(&hm)
-                }
-            };
-        println!("form_state_res: {:#?}", &form_state_res);
-
-        /* let maybe_res: Result<Self, serde_json::Error> =
-        serde_json::from_str(&req_get_state_string(req)); */
-
-        let mut maybe_state = match form_state_res {
-            Ok(s) => Some(s),
-            Err(e) => {
-                println!("Error deserializing state: {:?}", e);
-                None
-            }
-        };
-
-        let maybe_res: Result<Self, serde_json::Error> =
-            serde_json::from_str(&req_get_initial_state_string(req));
-
-        let mut maybe_initial_state = maybe_res.ok();
-
-        let mut key = match req.get_ref::<UrlEncodedQuery>() {
-            Ok(ref hashmap) => Self::get_key(&hashmap, &maybe_state),
-            Err(ref _e) => {
-                let hm = HashMap::new();
-                Self::get_key(&hm, &maybe_state)
-            }
-        };
-
-        let event = req_get_event(req);
-
-        let curr_initial_state = Self::get_state(key.clone());
-        let action = Self::event_handler(
-            &event,
-            &key,
-            &mut maybe_state,
-            &maybe_initial_state,
-            &curr_initial_state,
-        );
         let mut redirect_to = "".to_string();
         let mut reload_state = false;
 
-        match action {
-            RspAction::Render => {}
-            RspAction::ReloadState => {
-                reload_state = true;
-            }
-            RspAction::RedirectTo(target) => {
-                redirect_to = target;
-            }
-            RspAction::SetKey(k) => {
-                key = k;
-                reload_state = true;
-            }
-        };
+        let auth = TA::from_request(req);
+
+        match TA::auth_action(&auth) {
+            RspAuthAction::Render => { /* do nothing */ }
+            RspAuthAction::RedirectTo(login) => redirect_to = login,
+        }
 
         if redirect_to.is_empty() {
-            if maybe_state.is_none() || maybe_initial_state.is_none() || reload_state {
-                let st = Self::get_state(key.clone());
-                maybe_initial_state = Some(st.clone());
-                maybe_state = Some(st);
-            }
-            let mut data = MapBuilder::new();
-            let template = get_page_template!(&Self::get_template_name());
-            let mut state = maybe_state.unwrap();
-            let initial_state = maybe_initial_state.unwrap();
-            data = Self::fill_data(
-                data,
+            let form_state_res: Result<Self, serde_frommap::Error> =
+                match req.get_ref::<UrlEncodedBody>() {
+                    Ok(ref hashmap) => {
+                        let res: Result<Self, _> = serde_frommap::from_map(&hashmap);
+                        res
+                    }
+                    _ => {
+                        let hm: HashMap<String, Vec<String>> = HashMap::new();
+                        serde_frommap::from_map(&hm)
+                    }
+                };
+            println!("form_state_res: {:#?}", &form_state_res);
+
+            /* let maybe_res: Result<Self, serde_json::Error> =
+            serde_json::from_str(&req_get_state_string(req)); */
+
+            let mut maybe_state = match form_state_res {
+                Ok(s) => Some(s),
+                Err(e) => {
+                    println!("Error deserializing state: {:?}", e);
+                    None
+                }
+            };
+
+            let maybe_res: Result<Self, serde_json::Error> =
+                serde_json::from_str(&req_get_initial_state_string(req));
+
+            let mut maybe_initial_state = maybe_res.ok();
+
+            let mut key = match req.get_ref::<UrlEncodedQuery>() {
+                Ok(ref hashmap) => Self::get_key(&hashmap, &maybe_state),
+                Err(ref _e) => {
+                    let hm = HashMap::new();
+                    Self::get_key(&hm, &maybe_state)
+                }
+            };
+
+            let event = req_get_event(req);
+
+            let curr_initial_state = Self::get_state(key.clone());
+            let action = Self::event_handler(
                 &event,
                 &key,
-                &mut state,
-                &initial_state,
+                &mut maybe_state,
+                &maybe_initial_state,
                 &curr_initial_state,
             );
-            data = data.insert("state", &state).unwrap();
-            data = data.insert("state_key", &key).unwrap();
-            data = data.insert("initial_state", &initial_state).unwrap();
-            data = data
-                .insert("state_json", &serde_json::to_string(&state).unwrap())
-                .unwrap();
-            data = data
-                .insert("state_key_json", &serde_json::to_string(&key).unwrap())
-                .unwrap();
 
-            data = data
-                .insert(
-                    "initial_state_json",
-                    &serde_json::to_string(&initial_state).unwrap(),
-                )
-                .unwrap();
+            match action {
+                RspAction::Render => {}
+                RspAction::ReloadState => {
+                    reload_state = true;
+                }
+                RspAction::RedirectTo(target) => {
+                    redirect_to = target;
+                }
+                RspAction::SetKey(k) => {
+                    key = k;
+                    reload_state = true;
+                }
+            };
+            if redirect_to.is_empty() {
+                if maybe_state.is_none() || maybe_initial_state.is_none() || reload_state {
+                    let st = Self::get_state(key.clone());
+                    maybe_initial_state = Some(st.clone());
+                    maybe_state = Some(st);
+                }
+                let mut data = MapBuilder::new();
+                let template = get_page_template!(&Self::get_template_name());
+                let mut state = maybe_state.unwrap();
+                let initial_state = maybe_initial_state.unwrap();
+                data = Self::fill_data(
+                    data,
+                    &event,
+                    &key,
+                    &mut state,
+                    &initial_state,
+                    &curr_initial_state,
+                );
+                data = data.insert("state", &state).unwrap();
+                data = data.insert("state_key", &key).unwrap();
+                data = data.insert("initial_state", &initial_state).unwrap();
+                data = data
+                    .insert("state_json", &serde_json::to_string(&state).unwrap())
+                    .unwrap();
+                data = data
+                    .insert("state_key_json", &serde_json::to_string(&key).unwrap())
+                    .unwrap();
 
-            let resp = build_response(template, data);
-            Ok(resp)
-        } else {
+                data = data
+                    .insert(
+                        "initial_state_json",
+                        &serde_json::to_string(&initial_state).unwrap(),
+                    )
+                    .unwrap();
+
+                let resp = build_response(template, data);
+                return Ok(resp);
+            }
+        }
+
+        if !redirect_to.is_empty() {
             use iron::headers::Location;
             // let mut resp = Response::with((status::TemporaryRedirect, $redirect_to.clone()));
             let mut resp = Response::with((status::Found, redirect_to.clone()));
             resp.headers.set(ContentType::html());
             resp.headers.set(Location(redirect_to));
-            Ok(resp)
+            return Ok(resp);
         }
+        panic!("redirect_to is empty. logic error");
     }
 }
 

@@ -6,7 +6,7 @@ pub struct PageState {
     txt_text_message: String,
 }
 
-impl RspState<i32, MyPageType> for PageState {
+impl RspState<i32, NoPageAuth> for PageState {
     fn get_key(args: &HashMap<String, Vec<String>>, maybe_state: &Option<PageState>) -> i32 {
         if let Some(st) = maybe_state {
             st.dd_testing

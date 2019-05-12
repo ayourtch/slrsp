@@ -1,0 +1,24 @@
+<html>
+<head>
+</head>
+<body>
+<pre>
+{{state_json}}
+{{state_key_json}}
+</pre>
+{{#state.message}}
+message: {{state.message}}
+{{/state.message}}
+
+
+<form method="post">
+{{#txtUsername}} {{> html_text }} {{/txtUsername}}
+{{#txtPassword}} {{> html_text }} {{/txtPassword}}
+<input type="hidden" name="return_url" value="{{state.return_url}}">
+<input type="hidden" name="initial_state" value="{{initial_state_json}}">
+<input type="submit" name="submit_login" value="Login">
+</form>
+</body>
+</html>
+
+

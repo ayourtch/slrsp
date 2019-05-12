@@ -8,5 +8,18 @@ pub use rspten::RspEvent;
 
 pub use std::collections::HashMap;
 
-pub struct MyPageType {}
-impl rspten::RspPageType for MyPageType {}
+extern crate iron;
+
+pub struct NoPageAuth {}
+impl rspten::RspUserAuth for NoPageAuth {
+    fn from_request(req: &mut iron::Request) -> NoPageAuth {
+        NoPageAuth {}
+    }
+    fn auth_action(auth: &Self) -> RspAuthAction {
+        rspten::RspAuthAction::Render
+    }
+
+    fn has_rights(auth: &Self, rights: &str) -> bool {
+        false
+    }
+}

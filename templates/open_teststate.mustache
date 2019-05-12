@@ -1,0 +1,84 @@
+<html>
+<head>
+<script>
+function rspten_fixup_html_elements_2(state, initial_state, evt)
+{
+    var st = document.querySelectorAll(".stateful");
+    for (i=0; i<st.length; ++i) {
+      var el = st[i];
+      // console.log("el[" + i + "] = " + el.tagName);
+      if (el.tagName == "FORM") {
+        if (!("event_old_value" in el)) {
+          add_hidden_input(el, "state", JSON.stringify(state));
+          add_hidden_input(el, "initial_state", JSON.stringify(initial_state));
+          add_hidden_input(el, "event", "unknown");
+          add_hidden_input(el, "event_target", "");
+          add_hidden_input(el, "debug", "");
+        }
+      } else if (el.tagName == "A") {
+            el.addEventListener('click', evt.onclick);
+      } else {
+        el.addEventListener('input', evt.oninput);
+        el.addEventListener('change', evt.onchange);
+        if (el.type) {
+          if (el.type == "submit") {
+            el.addEventListener('click', evt.onclick);
+          }
+          if (el.type == "button") {
+            el.addEventListener('click', evt.onclick);
+          }
+        }
+      }
+}
+
+function rspten_fixup_html_elements(state, evt)
+{
+  rspten_fixup_html_elements_2(state, state, evt);
+}
+
+
+</script>
+</head>
+<body>
+
+
+<pre>
+{{txt_text_message.id}}
+{{btnTest.id}}
+</pre>
+
+teststate template
+<br/>
+message = {{state.txtTextMessage}}
+<br/>
+{{^state_key.id}}
+No key supplied!
+{{/state_key.id}}
+{{#state_key.id}}
+key = {{state_key.id}}
+{{/state_key.id}}
+
+
+<pre>
+{{state_json}}
+{{state_key_json}}
+</pre>
+
+{{#modified}}Record has been modified{{/modified}}
+
+<form method="post">
+{{#btnTest}} {{> html_submit}} {{/btnTest}}
+{{#ddMyDropdown}} {{>html_select}} {{/ddMyDropdown}}
+{{#dd_testing}} {{>html_select}} {{/dd_testing}}
+{{#cbTestCheck}} {{> html_checkbox }} {{/cbTestCheck}}
+{{#txt_text_message}} {{> html_text }} {{/txt_text_message}}
+<input type="hidden" name="initial_state" value="{{initial_state_json}}">
+<input type="submit" name="submit_lt" value="<">
+<input type="submit" name="submit_eq" value="=">
+<input type="submit" name="submit_gt" value=">">
+</form>
+<a href="/logout">logout</a>
+
+</body>
+</html>
+

@@ -21,13 +21,19 @@ fn bool_false() -> bool {
     false
 }
 
-impl RspState<KeyI32, NoPageAuth> for PageState {
-    fn get_key(args: &HashMap<String, Vec<String>>, _maybe_state: &Option<PageState>) -> KeyI32 {
+type MyPageAuth = NoPageAuth;
+
+impl RspState<KeyI32, MyPageAuth> for PageState {
+    fn get_key(
+        auth: &MyPageAuth,
+        args: &HashMap<String, Vec<String>>,
+        _maybe_state: &Option<PageState>,
+    ) -> KeyI32 {
         KeyI32 {
             id: args.get("id").map_or(None, |x| x[0].parse::<i32>().ok()),
         }
     }
-    fn get_state(key: KeyI32) -> PageState {
+    fn get_state(auth: &MyPageAuth, key: KeyI32) -> PageState {
         println!("default state for PageState with key: {:?}", &key);
         PageState {
             dd_testing: -1,
@@ -37,6 +43,7 @@ impl RspState<KeyI32, NoPageAuth> for PageState {
         }
     }
     fn fill_data(
+        auth: &MyPageAuth,
         data: MapBuilder,
         ev: &RspEvent,
         curr_key: &KeyI32,
@@ -80,6 +87,8 @@ impl RspState<KeyI32, NoPageAuth> for PageState {
     }
 
     fn event_handler(
+        req: &mut Request,
+        auth: &MyPageAuth,
         _ev: &RspEvent,
         _curr_key: &KeyI32,
         _maybe_state: &mut Option<PageState>,

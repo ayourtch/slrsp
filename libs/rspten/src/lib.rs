@@ -46,7 +46,6 @@ use std::fmt::Debug;
 mod html_types;
 pub use html_types::*;
 
-
 #[macro_export]
 macro_rules! html_select {
     ( $gd: ident, $elt: ident, $from: expr , $state: ident, $default_state: ident, $modified: ident) => {
@@ -58,7 +57,7 @@ macro_rules! html_select {
             $elt.id = format!("{}", stringify!($elt));
             $modified = $modified || $elt.highlight;
         }
-        let $gd = || { $gd().insert(stringify!($elt), &$elt).unwrap() };
+        let $gd = || $gd().insert(stringify!($elt), &$elt).unwrap();
     };
 }
 
@@ -86,7 +85,7 @@ macro_rules! html_text {
             $modified = $modified || $elt.highlight;
         }
 
-        let $gd = || { $gd().insert(stringify!($elt), &$elt).unwrap() };
+        let $gd = || $gd().insert(stringify!($elt), &$elt).unwrap();
     };
 }
 
@@ -99,7 +98,7 @@ macro_rules! html_button {
             $elt.id = format!("{}", stringify!($elt));
             $elt.value = $label.into();
         }
-        let $gd = || { $gd().insert(stringify!($elt), &$elt).unwrap() };
+        let $gd = || $gd().insert(stringify!($elt), &$elt).unwrap();
     };
 }
 
@@ -145,7 +144,7 @@ macro_rules! html_check {
             $elt.id = format!("{}", stringify!($elt));
             $elt.checked = $state.$elt;
         }
-        let $gd = || { $gd().insert(stringify!($elt), &$elt).unwrap() };
+        let $gd = || $gd().insert(stringify!($elt), &$elt).unwrap();
     };
 }
 

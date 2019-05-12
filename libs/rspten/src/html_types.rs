@@ -1,4 +1,3 @@
-
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]
 pub struct HtmlText {
     pub id: String,
@@ -47,7 +46,6 @@ pub struct HtmlSelect<T: PartialEq + Clone + Debug> {
     pub hidden: bool,
     pub disabled: bool,
 }
-
 
 impl<T> HtmlSelect<T>
 where

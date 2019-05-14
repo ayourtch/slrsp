@@ -13,7 +13,7 @@ message: {{state.message}}
 
 <form method="post">
 {{#txtUsername}} {{> html_text }} {{/txtUsername}}
-{{#txtPassword}} {{> html_text }} {{/txtPassword}}
+{{#txtPassword}} {{> html_pass }} {{/txtPassword}}
 <input type="hidden" name="return_url" value="{{state.return_url}}">
 <input type="hidden" name="initial_state" value="{{initial_state_json}}">
 <input type="submit" name="submit_login" value="Login">

@@ -1,3 +1,4 @@
+#![allow(non_snake_case)]
 use super::imports::*;
 
 #[derive(RspTraits, Debug, Clone, Serialize, Deserialize)]
@@ -12,7 +13,7 @@ type MyPageAuth = NoPageAuth;
 
 impl RspState<String, MyPageAuth> for PageState {
     fn get_key(
-        auth: &MyPageAuth,
+        _auth: &MyPageAuth,
         args: &HashMap<String, Vec<String>>,
         maybe_state: &Option<PageState>,
     ) -> String {
@@ -23,7 +24,7 @@ impl RspState<String, MyPageAuth> for PageState {
             args.get("ReturnUrl").unwrap_or(&root)[0].clone()
         }
     }
-    fn get_state(auth: &MyPageAuth, key: String) -> PageState {
+    fn get_state(_auth: &MyPageAuth, key: String) -> PageState {
         PageState {
             txtUsername: "".to_string(),
             txtPassword: "".to_string(),
@@ -32,12 +33,12 @@ impl RspState<String, MyPageAuth> for PageState {
         }
     }
     fn fill_data(
-        auth: &MyPageAuth,
+        _auth: &MyPageAuth,
         data: MapBuilder,
-        ev: &RspEvent,
-        curr_key: &String,
+        _ev: &RspEvent,
+        _curr_key: &String,
         state: &mut Self,
-        initial_state: &Self,
+        _initial_state: &Self,
         curr_initial_state: &Self,
     ) -> MapBuilder {
         let mut modified = false;
@@ -49,9 +50,9 @@ impl RspState<String, MyPageAuth> for PageState {
 
     fn event_handler(
         req: &mut Request,
-        auth: &MyPageAuth,
+        _auth: &MyPageAuth,
         _ev: &RspEvent,
-        curr_key: &String,
+        _curr_key: &String,
         _maybe_state: &mut Option<PageState>,
         _maybe_initial_state: &Option<PageState>,
         _curr_initial_state: &PageState,

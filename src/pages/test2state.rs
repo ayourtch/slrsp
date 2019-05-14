@@ -6,8 +6,14 @@ pub struct PageState {
     txt_text_message: String,
 }
 
-impl RspState<i32, NoPageAuth> for PageState {
-    fn get_key(args: &HashMap<String, Vec<String>>, maybe_state: &Option<PageState>) -> i32 {
+type MyPageAuth = NoPageAuth;
+
+impl RspState<i32, MyPageAuth> for PageState {
+    fn get_key(
+        _auth: &MyPageAuth,
+        args: &HashMap<String, Vec<String>>,
+        maybe_state: &Option<PageState>,
+    ) -> i32 {
         if let Some(st) = maybe_state {
             st.dd_testing
         } else {
@@ -15,7 +21,7 @@ impl RspState<i32, NoPageAuth> for PageState {
                 .map_or(-1, |x| x[0].parse::<i32>().unwrap_or(-1))
         }
     }
-    fn get_state(key: i32) -> PageState {
+    fn get_state(_auth: &MyPageAuth, key: i32) -> PageState {
         println!("default state for second PageState with key: {:?}", &key);
         PageState {
             dd_testing: -1,
@@ -23,6 +29,8 @@ impl RspState<i32, NoPageAuth> for PageState {
         }
     }
     fn event_handler(
+        _req: &mut Request,
+        _auth: &MyPageAuth,
         _ev: &RspEvent,
         curr_key: &i32,
         _maybe_state: &mut Option<PageState>,

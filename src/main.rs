@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 extern crate mustache;
 extern crate router;
 
@@ -14,14 +12,16 @@ extern crate rspten;
 #[macro_use]
 extern crate rspten_derive;
 
-use rspten::RspState;
-use rspten::*;
+// #[macro_use]
+extern crate chrono;
+extern crate iron;
+extern crate iron_sessionstorage;
 
-mod pages;
 mod html_helpers;
+mod pages;
 
 fn main() {
-    let mut router = pages::get_router();
+    let router = pages::get_router();
 
     let mut s = rspten::RspServer::new();
 

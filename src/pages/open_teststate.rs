@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 use super::imports::*;
 use html_helpers::dbh_get_dropdown;
 use html_helpers::dbh_get_testing_dropdown;
@@ -17,15 +19,11 @@ pub struct PageState {
     ddMyDropdown: i32,
 }
 
-fn bool_false() -> bool {
-    false
-}
-
 type MyPageAuth = NoPageAuth;
 
 impl RspState<KeyI32, MyPageAuth> for PageState {
     fn get_key(
-        auth: &MyPageAuth,
+        _auth: &MyPageAuth,
         args: &HashMap<String, Vec<String>>,
         _maybe_state: &Option<PageState>,
     ) -> KeyI32 {
@@ -33,7 +31,7 @@ impl RspState<KeyI32, MyPageAuth> for PageState {
             id: args.get("id").map_or(None, |x| x[0].parse::<i32>().ok()),
         }
     }
-    fn get_state(auth: &MyPageAuth, key: KeyI32) -> PageState {
+    fn get_state(_auth: &MyPageAuth, key: KeyI32) -> PageState {
         println!("default state for PageState with key: {:?}", &key);
         PageState {
             dd_testing: -1,
@@ -43,12 +41,12 @@ impl RspState<KeyI32, MyPageAuth> for PageState {
         }
     }
     fn fill_data(
-        auth: &MyPageAuth,
+        _auth: &MyPageAuth,
         data: MapBuilder,
-        ev: &RspEvent,
+        _ev: &RspEvent,
         curr_key: &KeyI32,
         state: &mut Self,
-        initial_state: &Self,
+        _initial_state: &Self,
         curr_initial_state: &Self,
     ) -> MapBuilder {
         let mut modified = false;
@@ -87,8 +85,8 @@ impl RspState<KeyI32, MyPageAuth> for PageState {
     }
 
     fn event_handler(
-        req: &mut Request,
-        auth: &MyPageAuth,
+        _req: &mut Request,
+        _auth: &MyPageAuth,
         _ev: &RspEvent,
         _curr_key: &KeyI32,
         _maybe_state: &mut Option<PageState>,

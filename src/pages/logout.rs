@@ -1,31 +1,29 @@
 use super::imports::*;
 
 #[derive(RspTraits, Debug, Clone, Serialize, Deserialize)]
-pub struct PageState {
-}
+pub struct PageState {}
 
 type MyPageAuth = NoPageAuth;
 
 impl RspState<(), MyPageAuth> for PageState {
     fn get_key(
-        auth: &MyPageAuth,
-        args: &HashMap<String, Vec<String>>,
-        maybe_state: &Option<PageState>,
+        _auth: &MyPageAuth,
+        _args: &HashMap<String, Vec<String>>,
+        _maybe_state: &Option<PageState>,
     ) -> () {
         ()
     }
-    fn get_state(auth: &MyPageAuth, key: ()) -> PageState {
-        PageState {
-        }
+    fn get_state(_auth: &MyPageAuth, _key: ()) -> PageState {
+        PageState {}
     }
     fn fill_data(
-        auth: &MyPageAuth,
+        _auth: &MyPageAuth,
         data: MapBuilder,
-        ev: &RspEvent,
-        curr_key: &(),
-        state: &mut Self,
-        initial_state: &Self,
-        curr_initial_state: &Self,
+        _ev: &RspEvent,
+        _curr_key: &(),
+        _state: &mut Self,
+        _initial_state: &Self,
+        _curr_initial_state: &Self,
     ) -> MapBuilder {
         let gd = || data;
         gd()
@@ -33,9 +31,9 @@ impl RspState<(), MyPageAuth> for PageState {
 
     fn event_handler(
         req: &mut Request,
-        auth: &MyPageAuth,
+        _auth: &MyPageAuth,
         _ev: &RspEvent,
-        curr_key: &(),
+        _curr_key: &(),
         _maybe_state: &mut Option<PageState>,
         _maybe_initial_state: &Option<PageState>,
         _curr_initial_state: &PageState,

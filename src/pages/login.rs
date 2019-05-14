@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 use super::imports::*;
 
-#[derive(RspTraits, Debug, Clone, Serialize, Deserialize)]
+#[derive(RspHandlers, RspTraits, Debug, Clone, Serialize, Deserialize)]
 pub struct PageState {
     txtUsername: String,
     txtPassword: String,
@@ -43,8 +43,12 @@ impl RspState<String, MyPageAuth> for PageState {
     ) -> MapBuilder {
         let mut modified = false;
         let gd = || data;
+        /*
         html_text!(gd, txtUsername, state, curr_initial_state, modified);
         html_text!(gd, txtPassword, state, curr_initial_state, modified);
+        */
+        derived_html_inputs!(gd, _curr_key, state, curr_initial_state, modified);
+
         gd()
     }
 

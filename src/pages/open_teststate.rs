@@ -9,7 +9,8 @@ pub struct KeyI32 {
     id: Option<i32>,
 }
 
-#[derive(RspHandlers, RspTraits, Debug, Clone, Serialize, Deserialize)]
+// #[derive(RspHandlers, RspTraits, Debug, Clone, Serialize, Deserialize)]
+#[derive(RspTraits, Debug, Clone, Serialize, Deserialize)]
 #[table = "TableFoo"]
 pub struct PageState {
     dd_testing: i32,

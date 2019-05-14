@@ -12,10 +12,13 @@ pub struct KeyI32 {
 #[derive(RspHandlers, RspTraits, Debug, Clone, Serialize, Deserialize)]
 #[table = "TableFoo"]
 pub struct PageState {
+    #[html_fill(dbh_get_testing_dropdown($key.id.unwrap_or(-1)))]
     dd_testing: i32,
     txt_text_message: String,
     #[serde(default)]
     cbTestCheck: bool,
+    // #[html_hook($state.ddMyDropdown = dd_testing.borrow().selected_value)]
+    #[html_fill(dbh_get_dropdown($key.id.unwrap_or(-1)))]
     ddMyDropdown: i32,
 }
 
@@ -52,27 +55,9 @@ impl RspState<KeyI32, MyPageAuth> for PageState {
         let mut modified = false;
         let gd = || data;
 
+        derived_html_inputs!(gd, curr_key, state, curr_initial_state, modified);
+
         html_button!(gd, btnTest, "Test");
-        html_text!(gd, txt_text_message, state, curr_initial_state, modified);
-        html_check!(gd, cbTestCheck, state, curr_initial_state, modified);
-
-        html_select!(
-            gd,
-            ddMyDropdown,
-            dbh_get_dropdown(curr_key.id.unwrap_or(-1)),
-            state,
-            curr_initial_state,
-            modified
-        );
-        html_select!(
-            gd,
-            dd_testing,
-            dbh_get_testing_dropdown(curr_key.id.unwrap_or(-1)),
-            state,
-            curr_initial_state,
-            modified
-        );
-
         btnTest.borrow_mut().disabled = if state.dd_testing % 2 == 0 {
             true
         } else {

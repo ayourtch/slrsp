@@ -76,8 +76,132 @@ pub fn rsp_traits_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStr
     TokenStream::from(expanded)
 }
 
-#[proc_macro_derive(RspHandlers, attributes(html, table, field))]
+#[proc_macro_derive(RspHandlers, attributes(html, html_fill, html_hook, table, field))]
 pub fn rsp_handlers_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    use crate::proc_macro::TokenStream;
+
+    let ast = parse_macro_input!(input as DeriveInput);
+
+    impl_handlers(&ast)
+}
+
+fn get_field_attr<'a>(name: &str, v: &'a Vec<syn::Attribute>) -> Option<&'a syn::Attribute> {
+    if v.len() > 0 {
+        for attr in v {
+            let type_name = &attr
+                .path
+                .segments
+                .pairs()
+                .last()
+                .unwrap()
+                .into_value()
+                .ident;
+            if type_name == name {
+                return Some(&attr);
+            }
+        }
+        return None;
+    } else {
+        return None;
+    }
+}
+
+fn impl_handlers(ast: &syn::DeriveInput) -> TokenStream {
+    let def_start = "\n\nmacro_rules! derived_html_inputs { ($gd: ident, $key: ident, $state: ident, $default_state: ident, $modified: ident) => {";
+    let def_end = "}; }";
+    let mut def_acc = "".to_string();
+
+    if let syn::Data::Struct(datastruct) = &ast.data {
+        if let syn::Fields::Named(fieldsnamed) = &datastruct.fields {
+            let mut out_debug: Vec<String> = vec![];
+
+            let nfields = fieldsnamed.named.len();
+            out_debug.push(format!("total fields: {}", &nfields));
+
+            for field in fieldsnamed.named.iter() {
+                let hook_attr = get_field_attr("html_hook", &field.attrs);
+                let hook_text = if let Some(attr) = hook_attr {
+                    format!("{};", &attr.tts)
+                } else {
+                    format!("")
+                };
+                def_acc.push_str(&hook_text);
+
+                let field_name = if let Some(ident) = &field.ident {
+                    format!("{}", &ident)
+                } else {
+                    panic!("Could not determine field name");
+                };
+                let html_field_name = format!("html_{}", &field_name);
+                let field_type = if let syn::Type::Path(tp) = &field.ty {
+                    // use quote::ToTokens;
+                    if tp.path.segments.len() > 1 {
+                        panic!("Only simple (path len = 1) types are supported)");
+                    }
+                    let type_name = &tp.path.segments.pairs().last().unwrap().into_value().ident;
+                    format!("{}", &type_name)
+                } else {
+                    panic!("Only simple types (path, path len = 1) are supported");
+                };
+                if field_name.starts_with("cb") {
+                    def_acc.push_str(&format!(
+                        "html_check!($gd, {}, $state, $default_state, $modified);\n",
+                        &field_name
+                    ));
+                } else if field_name.starts_with("txt") {
+                    def_acc.push_str(&format!(
+                        "html_text!($gd, {}, $state, $default_state, $modified);\n",
+                        &field_name
+                    ));
+                } else if field_name.starts_with("btn") {
+                    let setup_attr = get_field_attr("html_fill", &field.attrs);
+                    if let Some(attr) = setup_attr {
+                        out_debug.push(format!(" fill: {}", &attr.tts));
+                        let fill_tokens = format!("{}", &attr.tts);
+                        def_acc.push_str(&format!(
+                            "html_button!($gd, {}, {});\n",
+                            &field_name, &fill_tokens
+                        ));
+                    } else {
+                        def_acc.push_str(&format!(
+                            "html_button!($gd, {}, {});\n",
+                            &field_name, &field_name
+                        ));
+                    }
+                } else if field_name.starts_with("dd") {
+                    let setup_attr = get_field_attr("html_fill", &field.attrs);
+                    if let Some(attr) = setup_attr {
+                        out_debug.push(format!(" fill: {}", &attr.tts));
+                        let fill_tokens = format!("{}", &attr.tts);
+                        def_acc.push_str(&format!(
+                            "html_select!($gd, {}, {}, $state, $default_state, $modified);\n",
+                            &field_name, &fill_tokens
+                        ));
+                    } else {
+                        panic!(
+                            "field {} is dropdown, requires 'html_fill' attribute",
+                            &field_name
+                        );
+                    }
+                }
+
+                out_debug.push(format!(" {} : {}", &field_name, &field_type));
+            }
+
+            println!("{:#?}", &out_debug);
+            let full_def = format!("{}\n{}\n{}", def_start, def_acc, def_end);
+            println!("full def: {}", &full_def);
+            full_def.parse().unwrap()
+        } else {
+            panic!("Can not derive on unnamed fields");
+        }
+    } else {
+        panic!("Can not derive RspHandlers on non-struct");
+    }
+}
+
+#[proc_macro_derive(RspXHandlers, attributes(html, table, field))]
+pub fn rsp_xhandlers_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     // Construct a representation of Rust code as a syntax tree
     // that we can manipulate
     let mut ast = syn::parse(input).unwrap();

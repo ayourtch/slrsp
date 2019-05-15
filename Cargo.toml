@@ -4,9 +4,9 @@ version = "0.1.0"
 authors = ["Andrew Yourtchenko <ayourtch@gmail.com>"]
 
 [dependencies]
-rspten = { path = "libs/rspten" }
-rspten_derive = { path = "libs/rspten_derive" }
-req2struct = { path = "libs/req2struct" }
+rspten = { git = "https://github.com/ayourtch/rspten" }
+rspten_derive = { git = "https://github.com/ayourtch/rspten_derive" }
+req2struct = { git = "https://github.com/ayourtch/req2struct" }
 
 
 serde_json = "*"

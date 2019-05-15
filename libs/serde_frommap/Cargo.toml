@@ -1,9 +1,0 @@
-[package]
-name = "serde_frommap"
-version = "0.1.0"
-authors = ["Andrew Yourtchenko <ayourtch@gmail.com>"]
-edition = "2018"
-
-[dependencies]
-serde = "*"
-serde_derive = "*"

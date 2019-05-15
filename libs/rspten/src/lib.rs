@@ -21,7 +21,7 @@ extern crate diesel;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde;
-extern crate serde_frommap;
+extern crate req2struct;
 extern crate serde_json;
 
 // #[macro_use]
@@ -389,15 +389,15 @@ where
 
         let mut redirect_to = "".to_string();
         let mut reload_state = false;
-        let form_state_res: Result<Self, serde_frommap::Error> =
+        let form_state_res: Result<Self, req2struct::Error> =
             match req.get_ref::<UrlEncodedBody>() {
                 Ok(ref hashmap) => {
-                    let res: Result<Self, _> = serde_frommap::from_map(&hashmap);
+                    let res: Result<Self, _> = req2struct::from_map(&hashmap);
                     res
                 }
                 _ => {
                     let hm: HashMap<String, Vec<String>> = HashMap::new();
-                    serde_frommap::from_map(&hm)
+                    req2struct::from_map(&hm)
                 }
             };
         println!("form_state_res: {:#?}", &form_state_res);

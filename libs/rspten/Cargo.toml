@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Andrew Yourtchenko <ayourtch@gmail.com>"]
 
 [dependencies]
-serde_frommap = { path = "../../libs/serde_frommap" }
+req2struct = { path = "../../libs/req2struct" }
 
 iron = "*"
 persistent = "*"
